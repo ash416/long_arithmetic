@@ -13,11 +13,11 @@
 
 #include <time.h>
 
-/*TEST(LETestSuite, LittleSumCorrectnessTest)
+TEST(LETestSuite, LittleSumCorrectnessTest)
 {
 	std::ofstream resSum;
-	resSum.open("resultsLsum.txt");
-	CReader sumReader("Sum.txt");
+	resSum.open("results_1/resultsLsum.txt");
+	CReader sumReader("data/Sum.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 
@@ -45,8 +45,8 @@
 TEST(LETestSuite, SimpleDiffCorrectnessTest)
 {
 	std::ofstream resDiff;
-	resDiff.open("resultsLdiff.txt");
-	CReader diffReader("Diff.txt");
+	resDiff.open("results_1/resultsLdiff.txt");
+	CReader diffReader("data/Diff.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
@@ -74,10 +74,10 @@ TEST(LETestSuite, SimpleDiffCorrectnessTest)
 TEST(BETestSuite, SimpleSumCorrectnessTest)
 {
 	std::ofstream resSum;
-	resSum.open("resultsBsum.txt");
+	resSum.open("results_1/resultsBsum.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
-	CReader sumReader("Sum.txt");
+	CReader sumReader("data/Sum.txt");
 	for (int i = 0; i < 100; i++) {
 		CBigIntBig lit1(sumReader.first_number[i]), lit2(sumReader.second_number[i]);
 		CBigIntBig origin(sumReader.result_number[i]);
@@ -102,8 +102,8 @@ TEST(BETestSuite, SimpleSumCorrectnessTest)
 TEST(BETestSuite, SimpleDiffCorrectnessTest)
 {
 	std::ofstream resDiff;
-	resDiff.open("resultsBdiff.txt");
-	CReader diffReader("Diff.txt");
+	resDiff.open("results_1/resultsBdiff.txt");
+	CReader diffReader("data/Diff.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
@@ -125,13 +125,13 @@ TEST(BETestSuite, SimpleDiffCorrectnessTest)
 	}
 	resDiff.close();
 	std::cout << " " << time << std::endl;
-}*/
+}
 
-TEST(BETestSuite, SimpleMultCorrectnessTest)
+/*TEST(BETestSuite, SimpleMultCorrectnessTest)
 {
 	std::ofstream resMult;
-	resMult.open("resultsBmult.txt");
-	CReader multReader("Mult.txt");
+	resMult.open("results_1/resultsBmult.txt");
+	CReader multReader("data/Mult.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
@@ -158,8 +158,8 @@ TEST(BETestSuite, SimpleMultCorrectnessTest)
 TEST(LETestSuite, SimpleMultCorrectnessTest)
 {
 	std::ofstream resMult;
-	resMult.open("resultsLmult.txt");
-	CReader multReader("Mult.txt");
+	resMult.open("results_1/resultsLmult.txt");
+	CReader multReader("data/Mult.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
@@ -182,12 +182,12 @@ TEST(LETestSuite, SimpleMultCorrectnessTest)
 	resMult.close();
 	std::cout << " " << time << std::endl;
 }
-/*
+
 TEST(BETestSuite, SimpleDivCorrectnessTest)
 {
 	std::ofstream resDiv;
-	resDiv.open("resultsBdiv.txt");
-	CReader divReader("Div.txt");
+	resDiv.open("results_1/resultsBdiv.txt");
+	CReader divReader("data/Div.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
@@ -214,8 +214,8 @@ TEST(BETestSuite, SimpleDivCorrectnessTest)
 TEST(LETestSuite, SimpleDivCorrectnessTest)
 {
 	std::ofstream resDiv;
-	resDiv.open("resultsLdiv.txt");
-	CReader divReader("Div.txt");
+	resDiv.open("results_1/resultsLdiv.txt");
+	CReader divReader("data/Div.txt");
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 	for (int i = 0; i < 100; i++) {
