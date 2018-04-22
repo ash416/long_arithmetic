@@ -129,28 +129,45 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		sum.sign = num1.sign;
 	}
 	else {
-		CBigIntLittle _num1, _num2;
-		_num1 = num1, _num2 = num2;
-		_num1.sign = true;
-		_num2.sign = true;
-		bool num1_is_less = (_num1 < _num2);
-		if (num1_is_less) {
-			CBigIntLittle temp;
-			temp = _num1;
-			_num1 = _num2;
-			_num2 = temp;
-			temp.deleteNumber();
-		}
-		sum.size = _num1.size;
-		sum.buf = (int*) malloc(sum.size * sizeof(int));
-		for (int i = 0; i < _num1.size; i++) {
-			if (i >= _num2.size) {
-				sum.buf[i] = (_num1[i] - carry + 10) % 10;
-				carry = (_num1[i] - carry) >= 0 ? 0 : 1;
-				continue;
+		bool num1_is_less;
+		if (num1.size != num2.size)
+			num1_is_less = num1.size > num2.size ? false : true;
+		else { 
+			for (int i = num1.size - 1; i >= 0; i--) {
+				if (num1[i] == num2[i])
+					continue;
+				else {
+					num1_is_less = (num1[i] < num2[i]);
+					break;
+				}
 			}
-			sum.buf[i] = (_num1[i] - carry - _num2[i] + 10) % 10;
-			carry = (_num1[i] - carry >= _num2[i] ? 0 : 1);
+			num1_is_less = false;
+		}
+		if (num1_is_less) {
+			sum.size = num2.size;
+			sum.buf = (int*)malloc(sum.size * sizeof(int));
+			for (int i = 0; i < num2.size; i++) {
+				if (i >= num1.size) {
+					sum.buf[i] = (num2[i] - carry + 10) % 10;
+					carry = (num2[i] - carry) >= 0 ? 0 : 1;
+					continue;
+				}
+				sum.buf[i] = (num2[i] - carry - num1[i] + 10) % 10;
+				carry = (num2[i] - carry >= num1[i] ? 0 : 1);
+			}
+		}
+		else {
+			sum.size = num1.size;
+			sum.buf = (int*)malloc(sum.size * sizeof(int));
+			for (int i = 0; i < num1.size; i++) {
+				if (i >= num2.size) {
+					sum.buf[i] = (num1[i] - carry + 10) % 10;
+					carry = (num1[i] - carry) >= 0 ? 0 : 1;
+					continue;
+				}
+				sum.buf[i] = (num1[i] - carry - num2[i] + 10) % 10;
+				carry = (num1[i] - carry >= num2[i] ? 0 : 1);
+			}
 		}
 		sum.sign = num1_is_less ? num2.sign : num1.sign;
 		bool flag = false;
@@ -160,7 +177,6 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		}
 		if (flag)
 			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
-		_num1.deleteNumber(); _num2.deleteNumber();
 	}
 	return sum;
 }

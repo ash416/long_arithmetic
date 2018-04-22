@@ -134,33 +134,51 @@ CBigIntBig operator+(const CBigIntBig & num1, const CBigIntBig & num2)
 		sum.sign = num1.sign;
 	}
 	else {
-		CBigIntBig _num1, _num2;
-		_num1 = num1; _num2 = num2;
-		_num1.sign = true;
-		_num2.sign = true;
-		bool num1_is_less = (_num1 < _num2);
-		if (num1_is_less) {
-			CBigIntBig temp;
-			temp = _num1;
-			_num1 = _num2;
-			_num2 = temp;
-			temp.deleteNumber();
-		}
-		sum.size = _num1.size;
-		sum.buf = (int*) malloc(sum.size * sizeof(int));
-		int sum_index = sum.size - 1, i = _num1.size - 1, j =_num2.size - 1;
-		while (i >= 0) {
-			if (j < 0) {
-				sum[sum_index--] = (_num1[i] - carry + 10) % 10;
-				carry = (_num1[i--] - carry) >= 0 ? 0 : 1;
-				continue;
+		bool num1_is_less;
+		if (num1.size != num2.size)
+			num1_is_less = num1.size > num2.size ? false : true;
+		else { 
+			for (int i = 0; i < num1.size; i++) {
+				if (num1[i] == num2[i])
+					continue;
+				else {
+					num1_is_less = (num1[i] < num2[i]);
+				}
 			}
-			sum[sum_index--] = (_num1[i] - carry - _num2[j] + 10) % 10;
-			carry = (_num1[i] - carry >= _num2[j] ? 0 : 1);
-			i--; j--;
+			num1_is_less = false;
+		}
+		if (num1_is_less) {
+			sum.size = num2.size;
+			sum.buf = (int*)malloc(sum.size * sizeof(int));
+			int sum_index = sum.size - 1, i = num2.size - 1, j = num1.size - 1;
+			while (i >= 0) {
+				if (j < 0) {
+					sum[sum_index--] = (num2[i] - carry + 10) % 10;
+					carry = (num2[i--] - carry) >= 0 ? 0 : 1;
+					continue;
+				}
+				sum[sum_index--] = (num2[i] - carry - num1[j] + 10) % 10;
+				carry = (num2[i] - carry >= num1[j] ? 0 : 1);
+				i--; j--;
+			}
+		}
+		else {
+			sum.size = num1.size;
+			sum.buf = (int*)malloc(sum.size * sizeof(int));
+			int sum_index = sum.size - 1, i = num1.size - 1, j = num2.size - 1;
+			while (i >= 0) {
+				if (j < 0) {
+					sum[sum_index--] = (num1[i] - carry + 10) % 10;
+					carry = (num1[i--] - carry) >= 0 ? 0 : 1;
+					continue;
+				}
+				sum[sum_index--] = (num1[i] - carry - num2[j] + 10) % 10;
+				carry = (num1[i] - carry >= num2[j] ? 0 : 1);
+				i--; j--;
+			}
 		}
 		sum.sign = num1_is_less ? num2.sign : num1.sign;
-		i = 0;
+		int i = 0;
 		while (sum.size > 1 && sum.buf[i] == 0) {
 			sum.size--; i++;
 		}
@@ -169,8 +187,6 @@ CBigIntBig operator+(const CBigIntBig & num1, const CBigIntBig & num2)
 				sum[j] = sum[j + i];
 			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
 		}
-		_num1.deleteNumber();
-		_num2.deleteNumber();
 	}
 	return sum;
 }
