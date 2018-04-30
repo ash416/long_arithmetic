@@ -133,7 +133,8 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		if (num1.size != num2.size)
 			num1_is_less = num1.size > num2.size ? false : true;
 		else { 
-			for (int i = num1.size - 1; i >= 0; i--) {
+			int i;
+			for (i = num1.size - 1; i >= 0; i--) {
 				if (num1[i] == num2[i])
 					continue;
 				else {
@@ -141,7 +142,8 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 					break;
 				}
 			}
-			num1_is_less = false;
+			if (i < 0)
+				num1_is_less = false;
 		}
 		if (num1_is_less) {
 			sum.size = num2.size;
