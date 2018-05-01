@@ -35,8 +35,8 @@ public:
 		free(frac_part);
 	}
 	/*int getSizeInt() { return size - point - 1; }
-	int getSizeFrac() { return point + 1; }
-	int getSize() { return this->size; }*/
+	int getSizeFrac() { return point + 1; }*/
+	int getSize() { return this->int_size + this->frac_size; }
 
 };
 
