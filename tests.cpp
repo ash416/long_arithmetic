@@ -1,7 +1,16 @@
 #include <gtest/gtest.h>
 
 #include "BigIntLittle.h"
+#include "BigIntLittle2.h"
+#include "BigDoubleLittle2.h"
+#include "BigDoubleLittle3.h"
 #include "BigIntBig.h"
+#include "BigIntBig2.h"
+#include "BigDoubleLittle.h"
+#include "BigDoubleBig.h"
+#include "BigDoubleBig2.h"
+#include "BigDoubleBig3.h"
+#include "BigIntLittleBin.h"
 #include "Reader.h"
 
 #include <fstream>
@@ -10,26 +19,52 @@
 #include <ctime>
 #include <ratio>
 #include <chrono>
-
+#include <float.h>
+#include <algorithm>
 #include <time.h>
 
-TEST(LETestSuite, LittleSumCorrectnessTest)
-{
-	std::ofstream resSum;
-	resSum.open("results_1/resultsLsum.txt");
-	CReader sumReader("data/Sum.txt");
+
+template<class BigT>
+void test_func(const std::string & read_file, const std::string & write_file, const char oper) {
+	std::ofstream resFile;
+	resFile.open(write_file);
+	CReader reader(read_file);
 	double time = 0;
 	std::chrono::duration<double, std::milli> time_span;
 
-	for (int i = 0; i < 100; i++) {
-		CBigIntLittle lit1(sumReader.first_number[i]), lit2(sumReader.second_number[i]);
-		CBigIntLittle origin(sumReader.result_number[i]);
-		CBigIntLittle res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 + lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resSum << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
+	for (int i = 0; i < reader.num_string; i++) {
+		BigT lit1(reader.first_number[i]), lit2(reader.second_number[i]);
+		BigT origin(reader.result_number[i]);
+		BigT res;
+		if (oper == '+') {
+			std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+			res = lit1 + lit2;
+			std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+			time_span = t2 - t1;
+			resFile << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
+		}
+		else if (oper == '-') {
+			std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+			res = lit1 - lit2;
+			std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+			time_span = t2 - t1;
+			resFile << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
+		}
+		else if (oper == '*') {
+			std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+			res = lit1 * lit2;
+			std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+			time_span = t2 - t1;
+			resFile << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() + lit2.getSize()) << "\n";
+		}
+		else if (oper == '/') {
+			std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+			res = lit1 / lit2;
+			std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+			time_span = t2 - t1;
+			resFile << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() >= lit2.getSize() ? lit1.getSize() - lit2.getSize() : 0) << "\n";
+		}
+		
 		time += time_span.count();
 		EXPECT_EQ(res, origin);
 		lit1.deleteNumber();
@@ -38,203 +73,89 @@ TEST(LETestSuite, LittleSumCorrectnessTest)
 		res.deleteNumber();
 		std::cout << i << " ";
 	}
-	resSum.close();
+	resFile.close();
 	std::cout << " " << time << std::endl;
 }
 
-TEST(LETestSuite, SimpleDiffCorrectnessTest)
+/*
+TEST(LETestSuite, Int1SumTest)
 {
-	std::ofstream resDiff;
-	resDiff.open("results_1/resultsLdiff.txt");
-	CReader diffReader("data/Diff.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntLittle lit1(diffReader.first_number[i]), lit2(diffReader.second_number[i]);
-		CBigIntLittle origin(diffReader.result_number[i]);
-		CBigIntLittle res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 - lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resDiff << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resDiff.close();
-	std::cout << " " << time << std::endl;
+	test_func<CBigIntLittle>(std::string("data/Sum.txt"), std::string("results_int_1/resultsLsum.txt"), '+');
 }
 
-
-TEST(BETestSuite, SimpleSumCorrectnessTest)
+TEST(BETestSuite, Int1SumTest)
 {
-	std::ofstream resSum;
-	resSum.open("results_1/resultsBsum.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	CReader sumReader("data/Sum.txt");
-	for (int i = 0; i < 100; i++) {
-		CBigIntBig lit1(sumReader.first_number[i]), lit2(sumReader.second_number[i]);
-		CBigIntBig origin(sumReader.result_number[i]);
-		CBigIntBig res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 + lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resSum << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resSum.close();
-	std::cout << " " << time << std::endl;
+	test_func<CBigIntBig>(std::string("data/Sum.txt"), std::string("results_int_1/resultsBsum.txt"), '+');
 }
 
-TEST(BETestSuite, SimpleDiffCorrectnessTest)
+TEST(LETestSuite, Int1DiffTest)
 {
-	std::ofstream resDiff;
-	resDiff.open("results_1/resultsBdiff.txt");
-	CReader diffReader("data/Diff.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntBig lit1(diffReader.first_number[i]), lit2(diffReader.second_number[i]);
-		CBigIntBig origin(diffReader.result_number[i]);
-		CBigIntBig res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 - lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resDiff << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() > lit2.getSize() ? lit1.getSize() : lit2.getSize()) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resDiff.close();
-	std::cout << " " << time << std::endl;
+	test_func<CBigIntLittle>(std::string("data/Diff.txt"), std::string("results_int_1/resultsLdiff.txt"), '-');
 }
 
-/*TEST(BETestSuite, SimpleMultCorrectnessTest)
+TEST(BETestSuite, Int1DiffTest)
 {
-	std::ofstream resMult;
-	resMult.open("results_1/resultsBmult.txt");
-	CReader multReader("data/Mult.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntBig lit1(multReader.first_number[i]), lit2(multReader.second_number[i]);
-		CBigIntBig origin(multReader.result_number[i]);
-		CBigIntBig res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 * lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resMult << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() + lit2.getSize()) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resMult.close();
-	std::cout << " " << time << std::endl;
-}
-
-TEST(LETestSuite, SimpleMultCorrectnessTest)
-{
-	std::ofstream resMult;
-	resMult.open("results_1/resultsLmult.txt");
-	CReader multReader("data/Mult.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntLittle lit1(multReader.first_number[i]), lit2(multReader.second_number[i]);
-		CBigIntLittle origin(multReader.result_number[i]);
-		CBigIntLittle res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 * lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resMult << std::to_string(time_span.count()) << " " << std::to_string(lit1.getSize() + lit2.getSize()) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resMult.close();
-	std::cout << " " << time << std::endl;
-}
-
-TEST(BETestSuite, SimpleDivCorrectnessTest)
-{
-	std::ofstream resDiv;
-	resDiv.open("results_1/resultsBdiv.txt");
-	CReader divReader("data/Div.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntBig lit1(divReader.first_number[i]), lit2(divReader.second_number[i]);
-		CBigIntBig origin(divReader.result_number[i]);
-		CBigIntBig res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 / lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resDiv << std::to_string(time_span.count()) << " " << std::to_string(lit1 > lit2 ? lit1.getSize() - lit2.getSize() : 0) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resDiv.close();
-	std::cout << " " << time << std::endl;
-}
-
-TEST(LETestSuite, SimpleDivCorrectnessTest)
-{
-	std::ofstream resDiv;
-	resDiv.open("results_1/resultsLdiv.txt");
-	CReader divReader("data/Div.txt");
-	double time = 0;
-	std::chrono::duration<double, std::milli> time_span;
-	for (int i = 0; i < 100; i++) {
-		CBigIntLittle lit1(divReader.first_number[i]), lit2(divReader.second_number[i]);
-		CBigIntLittle origin(divReader.result_number[i]);
-		CBigIntLittle res;
-		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		res = lit1 / lit2;
-		std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-		time_span = t2 - t1;
-		resDiv << std::to_string(time_span.count()) << " " << std::to_string(lit1 > lit2 ? lit1.getSize() - lit2.getSize() : 0) << "\n";
-		time += time_span.count();
-		EXPECT_EQ(res, origin);
-		lit1.deleteNumber();
-		lit2.deleteNumber();
-		origin.deleteNumber();
-		res.deleteNumber();
-		std::cout << i << " ";
-	}
-	resDiv.close();
-	std::cout << " " << time << std::endl;
+	test_func<CBigIntBig>(std::string("data/Diff.txt"), std::string("results_int_1/resultsBdiff.txt"), '-');
 }*/
+
+TEST(LETestSuite, Int1MultTest)
+{
+	test_func<CBigIntLittle>(std::string("data/Mult.txt"), std::string("results_int_1/resultsLmult.txt"), '*');
+}
+
+TEST(BETestSuite, Int1MultTest)
+{
+	test_func<CBigIntBig>(std::string("data/Mult.txt"), std::string("results_int_1/resultsBmult.txt"), '*');
+}
+/*
+TEST(LETestSuite, Int1DivTest)
+{
+	test_func<CBigIntLittle>(std::string("data/Div.txt"), std::string("results_int_1/resultsLdiv.txt"), '/');
+}
+
+TEST(BETestSuite, Int1DivTest)
+{
+	test_func<CBigIntBig>(std::string("data/Div.txt"), std::string("results_int_1/resultsBdiv.txt"), '/');
+}
+
+TEST(LETestSuite, Int2SumTest)
+{
+	test_func<CBigIntLittle2>(std::string("data/Sum.txt"), std::string("results_int_2/resultsLsum.txt"), '+');
+}
+
+TEST(BETestSuite, Int2SumTest)
+{
+	test_func<CBigIntBig2>(std::string("data/Sum.txt"), std::string("results_int_2/resultsBsum.txt"), '+');
+}
+
+TEST(LETestSuite, Int2DiffTest)
+{
+	test_func<CBigIntLittle2>(std::string("data/Diff.txt"), std::string("results_int_2/resultsLdiff.txt"), '-');
+}
+
+TEST(BETestSuite, Int2DiffTest)
+{
+	test_func<CBigIntBig2>(std::string("data/Diff.txt"), std::string("results_int_2/resultsBdiff.txt"), '-');
+}
+
+TEST(LETestSuite, Int2MultTest)
+{
+	test_func<CBigIntLittle2>(std::string("data/Mult.txt"), std::string("results_int_2/resultsLmult.txt"), '*');
+}
+
+TEST(BETestSuite, Int2MultTest)
+{
+	test_func<CBigIntBig2>(std::string("data/Mult.txt"), std::string("results_int_2/resultsBmult.txt"), '*');
+}
+
+TEST(LETestSuite, Int2DivTest)
+{
+	test_func<CBigIntLittle2>(std::string("data/Div.txt"), std::string("results_int_2/resultsLdiv.txt"), '/');
+}
+
+TEST(BETestSuite, Int2DivTest)
+{
+	test_func<CBigIntBig2>(std::string("data/Div.txt"), std::string("results_int_2/resultsBdiv.txt"), '/');
+}
+
+*/
