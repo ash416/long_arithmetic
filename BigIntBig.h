@@ -3,6 +3,10 @@
 #include <iostream>
 #include <string>
 
+#include <ctime>
+#include <ratio>
+#include <chrono>
+
 
 class CBigIntBig {
 	int* buf;

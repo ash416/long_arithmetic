@@ -193,6 +193,8 @@ CBigIntLittle operator-(const CBigIntLittle & num1, CBigIntLittle & num2)
 
 CBigIntLittle operator*(const CBigIntLittle &num1, const CBigIntLittle &num2) {
 	CBigIntLittle result;
+	std::chrono::duration<double, std::milli> time_span;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	result.size = num1.size + num2.size;
 	result.buf = (int*) malloc(result.size * sizeof(int));
 	for (int i = 0; i < result.size; i++)
@@ -208,15 +210,26 @@ CBigIntLittle operator*(const CBigIntLittle &num1, const CBigIntLittle &num2) {
 			result[i + num1.size] = carry;
 		}
 	}
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	time_span = t2 - t1;
+	std::cout << " 1: " << std::to_string(time_span.count()) << "; ";
+	t1 = std::chrono::high_resolution_clock::now();
 	bool flag = false;
 	while (result.size > 1 && result[result.size - 1] == 0) {
 		result.size--;
 		flag = true;
 	}
+	t2 = std::chrono::high_resolution_clock::now();
+	time_span = t2 - t1;
+	std::cout << " 2: " << std::to_string(time_span.count()) << "; ";
+	t1 = std::chrono::high_resolution_clock::now();
 	if (flag) {
 		result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
 	}
 	result.sign = num1.sign == num2.sign ? true : false;
+	t2 = std::chrono::high_resolution_clock::now();
+	time_span = t2 - t1;
+	std::cout << " 3: " << std::to_string(time_span.count()) << "; ";
 	return result;
 }
 
