@@ -253,13 +253,13 @@ CBigDoubleLittle3 operator*(const CBigDoubleLittle3 &num1, const CBigDoubleLittl
 	result.sign = num1.sign == num2.sign ? true : false;
 	return result;
 }
-/*
 CBigDoubleLittle3 operator*(const CBigDoubleLittle3 & a, const int & c) {
 	if (c == 0)
 		return CBigDoubleLittle3("0");
 	CBigDoubleLittle3 result;
 	int b = c;
 	result.sign = (a.sign && b > 0) || (!a.sign && b < 0) ? true : false;
+	result.order = a.order;
 	if (b < 0) b *= (-1);
 	int temp, carry = 0;
 	int sizeB = 0;
@@ -274,45 +274,48 @@ CBigDoubleLittle3 operator*(const CBigDoubleLittle3 & a, const int & c) {
 		carry = temp / 10;
 		result[i] = temp - carry * 10;
 	}
-	while (carry > 0) {
-		result[i++] = carry % 10;
-		carry /= 10;
+	result[i] = carry;
+	/*bool flag = false;
+	i = result.size - 1;
+	while (i > 1 && result[i] == 0) {
+		result.size--; flag = true;
+		i--;
 	}
+	if (!flag)
+		result.order++;*/
 
 	return result;
 }
 
 CBigDoubleLittle3 operator/(const CBigDoubleLittle3 & a, const CBigDoubleLittle3 & b)
 {
-	
-
 	CBigDoubleLittle3 q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigDoubleLittle3 copyA;
-	int accuracy = 2;
-	copyA.size = a.size + 1 + (b.point - a.point > 0 ? b.point - a.point : 0) + accuracy;
+	int accuracy = 10;
+	int frac_diff = b.size - b.order - (a.size - a.order);
+	copyA.size = a.size + 1 + (frac_diff > 0 ? frac_diff : 0) + accuracy;
 	copyA.buf = (int*)malloc(copyA.size * sizeof(int));
 	int j;
-	for (j = 0; j < (b.point - a.point > 0 ? b.point - a.point : 0) + accuracy; j++)
+	for (j = 0; j < (frac_diff > 0 ? frac_diff : 0) + accuracy; j++)
 		copyA[j] = 0;
 	for (int i = 0; i < a.size; i++)
 		copyA[j++] = a[i];
-	int a_size = a.size;
+	int a_size = a.size + (frac_diff > 0 ? frac_diff  : 0);
 	if (copyA[j - 1] == 0) {
 		a_size--;
 		j--;
 		copyA.size--;
 	}
 	copyA[j] = 0;
-	std::cout << copyA << std::endl;
+
 	int shift = 0;
 	CBigDoubleLittle3 copyB;
 	copyB = b;
-
+	q.order = a.order - b.order - 1;
 	short scale;
 	short qGuess, r;
 	short borrow, carry;
-	int diff = a.size - b.size + b.point - a.point;
 	int n = b.size, m = a_size - b.size + accuracy;
 	scale = 10 / (b[n - 1] + 1);
 	if (scale > 1) {
@@ -325,25 +328,19 @@ CBigDoubleLittle3 operator/(const CBigDoubleLittle3 & a, const CBigDoubleLittle3
 			copyB.size--;
 		}
 	}
-
-	diff += (a[a.size - 1] >= b[b.size - 1] ? 1 : 0);
+	std::cout << copyA << std::endl;
+	std::cout << copyB << std::endl;
+	if (copyA[copyA.size - 1] != 0)
+		q.order++;
+	else
+		q.order += (copyA[copyA.size - 2] >= copyB[copyB.size - 1] ? 1 : 0);
 	q.size = m + 1;
 	q.buf = (int*)malloc(q.size * sizeof(int));
-	int new_m = m;
-	if (diff > 0)
-		q.point = q.size - diff - 1;
-	else {
-		while (diff <= 0) {
-			diff++;
-			q[new_m] = 0;
-			new_m--;
-		}
-		q.point = q.size - 2;
-	}
+	
 
 	int q_ind, a_ind;
-	for (q_ind = new_m, a_ind = a_size + accuracy; q_ind >= 0; q_ind--, a_ind--) {
-		if (q_ind + shift == q.point - accuracy) {
+	for (q_ind = m, a_ind = a_size + accuracy; q_ind >= 0; q_ind--, a_ind--) {
+		if (q_ind + shift == m - q.order - 1 - accuracy) {
 			shift++;
 			break;
 		}
@@ -359,7 +356,7 @@ CBigDoubleLittle3 operator/(const CBigDoubleLittle3 & a, const CBigDoubleLittle3
 		}
 		carry = 0;
 		borrow = 0;
-		int *aShift = copyA.buf + q_ind + (m - new_m);
+		int *aShift = copyA.buf + q_ind;
 
 		int temp1, temp2;
 		for (int i = 0; i < n; i++) {
@@ -387,16 +384,18 @@ CBigDoubleLittle3 operator/(const CBigDoubleLittle3 & a, const CBigDoubleLittle3
 			borrow = 0;
 		}
 		if (borrow == 0) {
-			if (q_ind + shift == new_m && qGuess == 0) {
-				q.point++;
+			if (q_ind + shift == m && qGuess == 0) {
+				if (copyA[copyA.size - 2] >= copyB[copyB.size - 1])
+					q.order--;
 				shift++;
 				continue;
 			}
 			q[q_ind + shift] = qGuess;
 		}
 		else {
-			if (q_ind + shift == new_m && qGuess - 1 == 0) {
-				q.point++;
+			if (q_ind + shift == m && qGuess - 1 == 0) {
+				if (copyA[copyA.size - 2] >= copyB[copyB.size - 1])
+					q.order--;
 				shift++;
 			}
 			else {
@@ -419,19 +418,30 @@ CBigDoubleLittle3 operator/(const CBigDoubleLittle3 & a, const CBigDoubleLittle3
 	}
 	copyA.deleteNumber();
 	copyB.deleteNumber();
+	std::cout << q << std::endl;
+	
 	if (shift != 0) {
-		for (int i = 0; i <= m - shift; i++)
-			q[i] = q[i + shift];
-		m -= shift;
-		q.point -= shift;
+		int sh = m - q.order - accuracy;
+		for (int i = 0; i <= m - sh; i++)
+			q[i] = q[i + sh];
+		m -= sh;
 		q.size = m + 1;
 		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
 	}
+	/*if (shift != 0) {
+		int sh = q.point - accuracy + 1;
+		for (int i = 0; i <= m - sh; i++)
+			q[i] = q[i + sh];
+		m -= sh;
+		q.point -= sh;
+		q.size = m + 1;
+		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
+	}*/
 	//else
 	//q.size = m + 1;
 	return q;
 }
-*/
+
 std::istream &operator >> (std::istream &stream, CBigDoubleLittle3 &num) {
 	std::string str;
 	stream >> str;

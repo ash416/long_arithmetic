@@ -286,43 +286,27 @@ CBigDoubleBig operator*(const CBigDoubleBig & a, const int & c) {
 		result[i--] = carry % 10;
 		carry /= 10;
 	}
-	/*i = 0;
-	if (result[i] == 0 && result.size > 1) {
-	result.size--;
-	i++;
-	}
-	if (i > 0) {
-	for (int j = 0; j < result.size - i + 1; j++)
-	result[j] = result[j + i];
-	result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
-	}*/
-
 	return result;
 }
 
 
 CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 {
-	if (a.size < b.size)
-		return CBigDoubleBig("0");
-	if (a.size == b.size) {
-		for (int i = 0; i < a.size; i++) {
-			if (a[i] == b[i])
-				continue;
-			else
-				if (a[i] < b[i])
-					return CBigDoubleBig("0");
-				else break;
-		}
-	}
 	CBigDoubleBig q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigDoubleBig copyA;
-	copyA.size = a.size + 1;
+	int accuracy = 10;
+	int frac_diff = b.size - b.point - (a.size - a.point);
+	copyA.size = a.size + 1 + (frac_diff > 0 ? frac_diff : 0) + accuracy;
 	copyA.buf = (int*)malloc(copyA.size * sizeof(int));
 	copyA[0] = 0;
-	for (int i = 1; i < copyA.size; i++)
+	int i, j;
+	for (i = 1; i <= a.size; i++)
 		copyA[i] = a[i - 1];
+	for (i = a.size + 1; i < copyA.size; i++)
+		copyA[i] = 0;
+	int a_size = a.size + frac_diff;
+	
 	int shift = 0;
 	CBigDoubleBig copyB;
 	copyB = b;
@@ -330,9 +314,12 @@ CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 	short scale;
 	short qGuess, r;
 	short borrow, carry;
-	int n = b.size, m = a.size - b.size;
+	int diff = a.point - b.point;
+	int n = b.size, m = a_size - b.size + accuracy;
 	scale = 10 / (b[0] + 1);
-	int i = 0, j = 0;
+	i = 0; j = 0;
+	//std::cout << copyA << std::endl;
+	//std::cout << copyB << std::endl;
 	if (scale > 1) {
 		copyA = copyA * scale;
 		if (copyA[i] == 0 && copyA.size > 1) {
@@ -345,12 +332,24 @@ CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 			j++;
 		}
 	}
+	//std::cout << copyA << std::endl;
+	//std::cout << copyB << std::endl;
+	if (copyA[0] != 0)
+		diff++;
+	else
+		diff += (copyA[1] >= copyB[0] ? 1 : 0);
 	int *aShift = copyA.buf + i;
 	int *bShift = copyB.buf + j;
 	q.size = m + 1;
 	q.buf = (int*)malloc(q.size * sizeof(int));
+	q.point = diff;
+	
 	int q_ind, a_ind;
 	for (q_ind = 0, a_ind = 0; q_ind <= m; q_ind++, a_ind++) {
+		if (q_ind - shift == q.point + accuracy) {
+			shift++;
+			break;
+		}
 		int temp = (aShift[a_ind] * 10 + aShift[a_ind + 1]);
 		qGuess = temp / bShift[0];
 		r = temp % bShift[0];
@@ -390,6 +389,8 @@ CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 		}
 		if (borrow == 0) {
 			if (q_ind - shift == 0 && qGuess == 0) {
+				if (copyA[1] >= copyB[0])
+					q.point--;
 				shift++;
 				continue;
 			}
@@ -397,6 +398,8 @@ CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 		}
 		else {
 			if (q_ind - shift == 0 && qGuess - 1 == 0) {
+				if (copyA[1] >= copyB[0])
+					q.point--;
 				shift++;
 			}
 			else {
@@ -424,8 +427,9 @@ CBigDoubleBig operator/(const CBigDoubleBig & a, const CBigDoubleBig & b)
 
 	m -= shift;
 	q.size = m + 1;
-	if (shift != 0)
+	if (shift != 0) {
 		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
+	}
 
 	return q;
 }

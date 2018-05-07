@@ -290,7 +290,7 @@ CBigDoubleBig2 operator*(const CBigDoubleBig2 &num1, const CBigDoubleBig2 &num2)
 	return result;
 }
 
-/*CBigDoubleBig2 operator*(const CBigDoubleBig2 & a, const int & c) {
+CBigDoubleBig2 operator*(const CBigDoubleBig2 & a, const int & c) {
 	if (c == 0)
 		return CBigDoubleBig2("0");
 	CBigDoubleBig2 result;
@@ -300,12 +300,18 @@ CBigDoubleBig2 operator*(const CBigDoubleBig2 &num1, const CBigDoubleBig2 &num2)
 	int temp, carry = 0;
 	int sizeB = 0;
 	for (int i = b; i > 0; i = i / 10, sizeB++);
-	result.size = a.size + sizeB;
-	result.buf = (int*)malloc(result.size * sizeof(int));
-	for (int i = 0; i < result.size; i++)
-		result[i] = 0;
+	result.int_size = a.int_size + sizeB;
+	result.frac_size = a.frac_size;
+	result.int_part = (int*)malloc(result.int_size * sizeof(int));
+	result.frac_part = (int*)malloc(result.frac_size * sizeof(int));
+	for (int i = 0; i < std::max(result.int_size, result.frac_size); i++) {
+		if (i < result.int_size)
+			result.int_part[i] = 0;
+		if (i < result.frac_size)
+			result.frac_part[i] = 0;
+	}
 	int i;
-	for (i = result.size - 1; i >= sizeB; i--) {
+	for (i = result.int_size + result.frac_size - 1; i >= sizeB; i--) {
 		temp = a[i - sizeB] * b + carry;
 		carry = temp / 10;
 		result[i] = temp - carry * 10;
@@ -314,71 +320,75 @@ CBigDoubleBig2 operator*(const CBigDoubleBig2 &num1, const CBigDoubleBig2 &num2)
 		result[i--] = carry % 10;
 		carry /= 10;
 	}
-	/*i = 0;
-	if (result[i] == 0 && result.size > 1) {
-	result.size--;
-	i++;
-	}
-	if (i > 0) {
-	for (int j = 0; j < result.size - i + 1; j++)
-	result[j] = result[j + i];
-	result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
-	}*/
-/*
 	return result;
 }
 
 
 CBigDoubleBig2 operator/(const CBigDoubleBig2 & a, const CBigDoubleBig2 & b)
 {
-	if (a.size < b.size)
-		return CBigDoubleBig2("0");
-	if (a.size == b.size) {
-		for (int i = 0; i < a.size; i++) {
-			if (a[i] == b[i])
-				continue;
-			else
-				if (a[i] < b[i])
-					return CBigDoubleBig2("0");
-				else break;
-		}
-	}
 	CBigDoubleBig2 q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigDoubleBig2 copyA;
-	copyA.size = a.size + 1;
-	copyA.buf = (int*)malloc(copyA.size * sizeof(int));
+	int accuracy = 3;
+	int frac_diff = b.frac_size - a.frac_size;
+	copyA.int_size = a.int_size + a.frac_size + 1 + (frac_diff > 0 ? frac_diff : 0) + accuracy;
+	copyA.int_part = (int*)malloc(copyA.int_size * sizeof(int));
 	copyA[0] = 0;
-	for (int i = 1; i < copyA.size; i++)
+	int i, j;
+	for (i = 1; i <= a.int_size + a.frac_size; i++)
 		copyA[i] = a[i - 1];
+	for (i = a.int_size + a.frac_size + 1; i < copyA.int_size; i++)
+		copyA[i] = 0;
+	int a_size = a.int_size + a.frac_size + frac_diff;
+
 	int shift = 0;
 	CBigDoubleBig2 copyB;
-	copyB = b;
+	copyB.int_size = b.int_size + b.frac_size;
+	copyB.int_part = (int*)malloc(copyB.int_size * sizeof(int));
+	for (int i = 0; i < copyB.int_size; i++) {
+		copyB.int_part[i] = b[i];
+	}
 
 	short scale;
 	short qGuess, r;
 	short borrow, carry;
-	int n = b.size, m = a.size - b.size;
+	int diff = a.int_size - b.int_size;
+	int n = b.int_size + b.frac_size, m = a_size - b.int_size - b.frac_size + accuracy;
 	scale = 10 / (b[0] + 1);
-	int i = 0, j = 0;
+	i = 0; j = 0;
+	//std::cout << copyA << std::endl;
+	//std::cout << copyB << std::endl;
 	if (scale > 1) {
 		copyA = copyA * scale;
-		if (copyA[i] == 0 && copyA.size > 1) {
-			copyA.size--;
+		if (copyA.int_part[i] == 0 && copyA.int_size > 1) {
+			copyA.int_size--;
 			i++;
 		}
 		copyB = copyB * scale;
-		if (copyB[j] == 0 && copyB.size > 1) {
-			copyB.size--;
+		if (copyB.int_part[j] == 0 && copyB.int_size > 1) {
+			copyB.int_size--;
 			j++;
 		}
 	}
-	int *aShift = copyA.buf + i;
-	int *bShift = copyB.buf + j;
-	q.size = m + 1;
-	q.buf = (int*)malloc(q.size * sizeof(int));
+	//std::cout << copyA << std::endl;
+	//std::cout << copyB << std::endl;
+	int *aShift = copyA.int_part + i;
+	int *bShift = copyB.int_part + j;
+	if (aShift[0] != 0)
+		diff++;
+	else
+		diff += (aShift[1] >= bShift[0] ? 1 : 0);
+	q.int_size = diff;
+	q.frac_size = m + 1 - diff;
+	q.int_part = (int*)malloc(q.int_size * sizeof(int));
+	q.frac_part = (int*)malloc(q.frac_size * sizeof(int));
+
 	int q_ind, a_ind;
 	for (q_ind = 0, a_ind = 0; q_ind <= m; q_ind++, a_ind++) {
+		if (q_ind - shift == q.int_size + accuracy) {
+			shift++;
+			break;
+		}
 		int temp = (aShift[a_ind] * 10 + aShift[a_ind + 1]);
 		qGuess = temp / bShift[0];
 		r = temp % bShift[0];
@@ -418,6 +428,12 @@ CBigDoubleBig2 operator/(const CBigDoubleBig2 & a, const CBigDoubleBig2 & b)
 		}
 		if (borrow == 0) {
 			if (q_ind - shift == 0 && qGuess == 0) {
+				if (aShift[1] >= bShift[0]) {
+					q.frac_size++;
+					q.int_size--;
+					q.frac_part = (int *)realloc(q.frac_part, q.frac_size * sizeof(int));
+					q.int_part = (int *)realloc(q.int_part, q.int_size * sizeof(int));
+				}
 				shift++;
 				continue;
 			}
@@ -425,6 +441,12 @@ CBigDoubleBig2 operator/(const CBigDoubleBig2 & a, const CBigDoubleBig2 & b)
 		}
 		else {
 			if (q_ind - shift == 0 && qGuess - 1 == 0) {
+				if (aShift[1] >= bShift[0]) {
+					q.frac_size++;
+					q.int_size--;
+					q.frac_part = (int *)realloc(q.frac_part, q.frac_size * sizeof(int));
+					q.int_part = (int *)realloc(q.int_part, q.int_size * sizeof(int));
+				}
 				shift++;
 			}
 			else {
@@ -447,17 +469,17 @@ CBigDoubleBig2 operator/(const CBigDoubleBig2 & a, const CBigDoubleBig2 & b)
 	}
 	/*while (copyA.size > 1 && (copyA[0] == 0))
 	copyA.size--;*/
-/*	copyA.deleteNumber();
+	copyA.deleteNumber();
 	copyB.deleteNumber();
 
-	m -= shift;
-	q.size = m + 1;
-	if (shift != 0)
-		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
+	q.frac_size -= shift;
+	if (shift != 0) {
+		q.frac_part = (int*)realloc(q.frac_part, q.frac_size * sizeof(int));
+	}
 
 	return q;
 }
-*/
+
 std::istream &operator >> (std::istream &stream, CBigDoubleBig2 &num) {
 	std::string str;
 	stream >> str;
