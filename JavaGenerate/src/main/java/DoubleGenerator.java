@@ -8,7 +8,23 @@ public class DoubleGenerator {
     public static void main(String[] args) throws IOException {
        // generateSum("sum_double.txt");
         //generateDiff("diff_double1.txt");
-        generateMult("mult_double2.txt");
+        //generateMult("mult_double2.txt");
+        generateDiv("div_double.txt");
+    }
+
+    private static void generateDiv(String file_name) throws IOException {
+        FileWriter nFile = new FileWriter("C:/Users/ash41/Documents/Visual Studio 2015/Projects/LongInteger/LongInteger/data/" + file_name);
+        for (int i = 0; i < 100; i++){
+            BigDecimal num1 = generateDouble();
+            BigDecimal num2 = generateDouble();
+            if (num1.compareTo(num2) < 0) {
+                i--;
+                continue;
+            }
+            BigDecimal sum = num1.divide(num2, 10, RoundingMode.DOWN);
+            nFile.write(num1.toPlainString() + ' ' + num2.toPlainString() + ' ' + sum.toPlainString() + '\n');
+        }
+        nFile.close();
     }
 
     private static void generateMult(String file_name) throws IOException {
@@ -21,6 +37,7 @@ public class DoubleGenerator {
         }
         nFile.close();
     }
+
     private static void generateSum(String file_name) throws IOException {
         FileWriter nFile = new FileWriter("C:/Users/ash41/Documents/Visual Studio 2015/Projects/LongInteger/LongInteger/data/" + file_name);
         for (int i = 0; i < 100; i++){
@@ -44,8 +61,11 @@ public class DoubleGenerator {
     }
 
     private static BigDecimal generateDouble(){
-        BigDecimal a = getRandNum(rnd(10, 100));
-        BigDecimal b = getRandNum(rnd(10, 100));
+        BigDecimal a, b;
+        do {
+            a = getRandNum(rnd(10, 1000));
+            b = getRandNum(rnd(10, 100));
+        } while (a.compareTo(b) < 0);
         return a.divide(b, rnd(1,10), RoundingMode.HALF_UP);
     }
     private static int rnd(int min, int max){
@@ -57,8 +77,10 @@ public class DoubleGenerator {
         String num = "";
         for(int i = 0; i < size; i++){
             int a = rnd(0, 9);
-            if (a == 0 && i == 0)
+            if (a == 0 && i == 0) {
+                i--;
                 continue;
+            }
             num = num + Integer.toString(a);
         }
         return new BigDecimal(num);
