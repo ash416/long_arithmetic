@@ -284,6 +284,8 @@ CBigIntBig operator*(const CBigIntBig & a, const int & c) {
 
 CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 {
+	std::chrono::duration<double, std::milli> time_span1, time_span2, time_span3;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	if (a.size < b.size)
 		return CBigIntBig("0");
 	if (a.size == b.size) {
@@ -296,6 +298,9 @@ CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 				else break;
 		}
 	}
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	//time_span = t2 - t1;
+	//std::cout << " 1: " << std::to_string(time_span.count()) << "; ";
 	CBigIntBig q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigIntBig copyA;
@@ -332,6 +337,7 @@ CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 	q.buf = (int*)malloc(q.size * sizeof(int));
 	int q_ind, a_ind;
 	for (q_ind = 0, a_ind = 0; q_ind <= m; q_ind++, a_ind++) {
+		t1 = std::chrono::high_resolution_clock::now();
 		int temp = (aShift[a_ind] * 10 + aShift[a_ind + 1]);
 		qGuess = temp / bShift[0];
 		r = temp % bShift[0];
@@ -342,6 +348,12 @@ CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 			}
 			else break;
 		}
+		t2 = std::chrono::high_resolution_clock::now();
+		if (q_ind == 0)
+			time_span1 = t2 - t1;
+		else
+			time_span1 += t2 - t1;
+		t1 = std::chrono::high_resolution_clock::now();
 		carry = 0;
 		borrow = 0;
 
@@ -369,9 +381,20 @@ CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 			aShift[q_ind] = temp2;
 			borrow = 0;
 		}
+		t2 = std::chrono::high_resolution_clock::now();
+		if (q_ind == 0)
+			time_span2 = t2 - t1;
+		else
+			time_span2 += t2 - t1;
+		t1 = std::chrono::high_resolution_clock::now();
 		if (borrow == 0) {
 			if (q_ind - shift == 0 && qGuess == 0) {
 				shift++;
+				t2 = std::chrono::high_resolution_clock::now();
+				if (q_ind == 0)
+					time_span3 = t2 - t1;
+				else
+					time_span3 += t2 - t1;
 				continue;
 			}
 			q[q_ind - shift] = qGuess;
@@ -397,17 +420,23 @@ CBigIntBig operator/(const CBigIntBig & a, const CBigIntBig & b)
 			}
 			aShift[q_ind] += carry - 10;
 		}
+		t2 = std::chrono::high_resolution_clock::now();
+		if (q_ind == 0)
+			time_span3 = t2 - t1;
+		else
+			time_span3 += t2 - t1;
 	}
 	/*while (copyA.size > 1 && (copyA[0] == 0))
 		copyA.size--;*/
+	std::cout << " 1: " << std::to_string(time_span1.count()) << "; ";
+	std::cout << " 2: " << std::to_string(time_span2.count()) << "; ";
+	std::cout << " 3: " << std::to_string(time_span3.count()) << "; ";
 	copyA.deleteNumber();
 	copyB.deleteNumber();
-	
 	m -= shift;
 	q.size = m + 1;
 	if (shift != 0)
 		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
-	
 	return q;
 }
 
