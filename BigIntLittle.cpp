@@ -96,7 +96,7 @@ CBigIntLittle &CBigIntLittle::operator =(const CBigIntLittle &num) {
 	free(this->buf);
 	this->buf = (int*)malloc(num.size * sizeof(int));
 	for (int i = 0; i < num.size; i++)
-		this->buf[i] = num[i];
+		this->buf[i] = num.buf[i];
 	this->sign = num.sign;
 	this->size = num.size;
 	return *this;
@@ -112,21 +112,23 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		for (int i = 0; i < sum.size; i++) {
 			int temp;
 			if (i >= num1.size) 
-				temp = num2[i] + carry;
-			else 
+				temp = num2.buf[i] + carry;
+			else
 				if (i >= num2.size) 
-					temp = num1[i] + carry;
+					temp = num1.buf[i] + carry;
 				else
-					temp = num1[i] + num2[i] + carry;
+					temp = num1.buf[i] + num2.buf[i] + carry;
 			sum.buf[i] = temp % 10;
 			carry = temp / 10;
 		}
+		//std::cout << " 1: " << (clock() - t) << " ";
 		if (carry > 0) {
 			sum.size++;
 			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
 			sum.buf[sum.size - 1] = carry;
 		}
 		sum.sign = num1.sign;
+		//std::cout << " 2: " << (clock() - t) << " ";
 	}
 	else {
 		bool num1_is_less;
@@ -135,10 +137,10 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		else { 
 			int i;
 			for (i = num1.size - 1; i >= 0; i--) {
-				if (num1[i] == num2[i])
+				if (num1.buf[i] == num2.buf[i])
 					continue;
 				else {
-					num1_is_less = (num1[i] < num2[i]);
+					num1_is_less = (num1.buf[i] < num2.buf[i]);
 					break;
 				}
 			}
@@ -150,12 +152,12 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 			sum.buf = (int*)malloc(sum.size * sizeof(int));
 			for (int i = 0; i < num2.size; i++) {
 				if (i >= num1.size) {
-					sum.buf[i] = (num2[i] - carry + 10) % 10;
-					carry = (num2[i] - carry) >= 0 ? 0 : 1;
+					sum.buf[i] = (num2.buf[i] - carry + 10) % 10;
+					carry = (num2.buf[i] - carry) >= 0 ? 0 : 1;
 					continue;
 				}
-				sum.buf[i] = (num2[i] - carry - num1[i] + 10) % 10;
-				carry = (num2[i] - carry >= num1[i] ? 0 : 1);
+				sum.buf[i] = (num2.buf[i] - carry - num1.buf[i] + 10) % 10;
+				carry = (num2.buf[i] - carry >= num1.buf[i] ? 0 : 1);
 			}
 		}
 		else {
@@ -163,14 +165,16 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 			sum.buf = (int*)malloc(sum.size * sizeof(int));
 			for (int i = 0; i < num1.size; i++) {
 				if (i >= num2.size) {
-					sum.buf[i] = (num1[i] - carry + 10) % 10;
-					carry = (num1[i] - carry) >= 0 ? 0 : 1;
+					sum.buf[i] = (num1.buf[i] - carry + 10) % 10;
+					carry = (num1.buf[i] - carry) >= 0 ? 0 : 1;
 					continue;
 				}
-				sum.buf[i] = (num1[i] - carry - num2[i] + 10) % 10;
-				carry = (num1[i] - carry >= num2[i] ? 0 : 1);
+				sum.buf[i] = (num1.buf[i] - carry - num2.buf[i] + 10) % 10;
+				carry = (num1.buf[i] - carry >= num2.buf[i] ? 0 : 1);
 			}
 		}
+
+
 		sum.sign = num1_is_less ? num2.sign : num1.sign;
 		bool flag = false;
 		while (sum.size > 1 && sum.buf[sum.size - 1] == 0) {
@@ -179,6 +183,7 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		}
 		if (flag)
 			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
+		
 	}
 	return sum;
 }
@@ -193,8 +198,7 @@ CBigIntLittle operator-(const CBigIntLittle & num1, CBigIntLittle & num2)
 
 CBigIntLittle operator*(const CBigIntLittle &num1, const CBigIntLittle &num2) {
 	CBigIntLittle result;
-	std::chrono::duration<double, std::milli> time_span;
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	clock_t t = clock();
 	result.size = num1.size + num2.size;
 	result.buf = (int*) malloc(result.size * sizeof(int));
 	for (int i = 0; i < result.size; i++)
@@ -210,26 +214,20 @@ CBigIntLittle operator*(const CBigIntLittle &num1, const CBigIntLittle &num2) {
 			result[i + num1.size] = carry;
 		}
 	}
-	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-	time_span = t2 - t1;
-	std::cout << " 1: " << std::to_string(time_span.count()) << "; ";
-	t1 = std::chrono::high_resolution_clock::now();
+	std::cout << " 1: " << std::to_string(clock() - t) << "; ";
+	t = clock();
 	bool flag = false;
 	while (result.size > 1 && result[result.size - 1] == 0) {
 		result.size--;
 		flag = true;
 	}
-	t2 = std::chrono::high_resolution_clock::now();
-	time_span = t2 - t1;
-	std::cout << " 2: " << std::to_string(time_span.count()) << "; ";
-	t1 = std::chrono::high_resolution_clock::now();
+	std::cout << " 2: " << std::to_string(clock() - t) << "; ";
+	t = clock();
 	if (flag) {
 		result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
 	}
 	result.sign = num1.sign == num2.sign ? true : false;
-	t2 = std::chrono::high_resolution_clock::now();
-	time_span = t2 - t1;
-	std::cout << " 3: " << std::to_string(time_span.count()) << "; ";
+	std::cout << " 3: " << std::to_string(clock() - t) << "; ";
 	return result;
 }
 
@@ -270,8 +268,9 @@ CBigIntLittle operator*(const CBigIntLittle & a, const int & c) {
 
 CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 {
-	std::chrono::duration<double, std::milli> time_span1, time_span2, time_span3;
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	clock_t t = clock();
+	//std::chrono::duration<double, std::milli> time_span;
+	//std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	if (a.size < b.size)
 		return CBigIntLittle("0");
 	if (a.size == b.size) {
@@ -284,9 +283,10 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 				else break;
 		}
 	}
-	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	//std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	//time_span = t2 - t1;
-	//std::cout << " 1: " << std::to_string(time_span.count()) << "; ";
+	std::cout << " 1: " << std::to_string(clock() - t) << "; ";
+	t = clock();
 	CBigIntLittle q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigIntLittle copyA;
@@ -303,6 +303,11 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 	short qGuess, r;
 	short borrow, carry;
 	int n = b.size, m = a.size - b.size;
+	//t2 = std::chrono::high_resolution_clock::now();
+	//time_span = t2 - t1;
+	std::cout << " 2: " << std::to_string(clock() - t) << "; ";
+	//t1 = std::chrono::high_resolution_clock::now();
+	t = clock();
 	scale = 10 / (b[n - 1] + 1);
 	if (scale > 1) {
 		copyA = copyA * scale;
@@ -314,13 +319,17 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			copyB.size--;
 		}
 	}
+	//t2 = std::chrono::high_resolution_clock::now();
+	//time_span = t2 - t1;
+	std::cout << " 3: " << std::to_string(clock() - t) << "; ";
 	int *aSh = copyA.buf;
 	int *bSh = copyB.buf;
 	q.size = m + 1;
 	q.buf = (int*) malloc(q.size * sizeof(int));
 	int q_ind, a_ind;
+	//t1 = std::chrono::high_resolution_clock::now();
+	t = clock();
 	for (q_ind = m, a_ind = n + q_ind; q_ind >= 0; q_ind--, a_ind--) {
-		t1 = std::chrono::high_resolution_clock::now();
 		int temp = (aSh[a_ind] * 10 + aSh[a_ind - 1]);
 		qGuess = temp / bSh[n - 1];
 		r = temp % bSh[n - 1];
@@ -331,12 +340,6 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			}
 			else break;
 		}
-		t2 = std::chrono::high_resolution_clock::now();
-		if (q_ind == m)
-			time_span1 = t2 - t1;
-		else
-			time_span1 += t2 - t1;
-		t1 = std::chrono::high_resolution_clock::now();
 		carry = 0; 
 		borrow = 0;
 		int *aShift = &aSh[0] + q_ind;
@@ -366,20 +369,9 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			aShift[n] = temp2;
 			borrow = 0;
 		}
-		t2 = std::chrono::high_resolution_clock::now();
-		if (q_ind == m)
-			time_span2 = t2 - t1;
-		else
-			time_span2 += t2 - t1;
-		t1 = std::chrono::high_resolution_clock::now();
 		if (borrow == 0) {
 			if (q_ind + shift == m && qGuess == 0) {
 				shift++;
-				t2 = std::chrono::high_resolution_clock::now();
-				if (q_ind == m)
-					time_span3 = t2 - t1;
-				else
-					time_span3 += t2 - t1;
 				continue;
 			}
 			q[q_ind + shift] = qGuess;
@@ -405,21 +397,23 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			}
 			aShift[n] += carry - 10;
 		}
-		t2 = std::chrono::high_resolution_clock::now();
-		if (q_ind == m)
-			time_span3 = t2 - t1;
-		else
-			time_span3 += t2 - t1;
 	}
-	std::cout << " 1: " << std::to_string(time_span1.count()) << "; ";
-	std::cout << " 2: " << std::to_string(time_span2.count()) << "; ";
-	std::cout << " 3: " << std::to_string(time_span3.count()) << "; ";
 	/*while (copyA.size > 1 && (copyA[copyA.size - 1] == 0))
 		copyA.size--;*/
-
+	//t2 = std::chrono::high_resolution_clock::now();
+//	time_span = t2 - t1;
+	std::cout << " 4: " << std::to_string(clock() - t) << "; ";
+	//t1 = std::chrono::high_resolution_clock::now();
+	t = clock();
 	copyA.deleteNumber();
 	copyB.deleteNumber();
+	//t2 = std::chrono::high_resolution_clock::now();
+	//time_span = t2 - t1;
+	std::cout << " 5: " << std::to_string(clock() - t) << "; ";
+	//t1 = std::chrono::high_resolution_clock::now();
+	t = clock();
 	if (shift != 0) {
+		std::cout << " shift point - >";
 		for (int i = 0; i <= m - shift; i++)
 			q[i] = q[i + shift];
 		m -= shift;
@@ -428,7 +422,9 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 	}
 	else	
 		q.size = m + 1;
-		
+	//t2 = std::chrono::high_resolution_clock::now();
+	//time_span = t2 - t1;
+	std::cout << " 6: " << std::to_string(clock() - t) << "; ";
 	return q;
 }
 
