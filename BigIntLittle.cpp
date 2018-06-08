@@ -6,7 +6,7 @@ CBigIntLittle::CBigIntLittle()
 
 CBigIntLittle::CBigIntLittle(std::string str)
 {
-	int leng = str.length();
+	size_t leng = str.length();
 	if (str[0] == '-') {
 		this->sign = false;
 		this->size = leng - 1;
@@ -15,17 +15,17 @@ CBigIntLittle::CBigIntLittle(std::string str)
 		this->sign = true;
 		this->size = leng;
 	}
-	this->buf =(int*) malloc(size * sizeof(int));
-	for (int i = 0; i < size; i++)
-		*(buf + i) = int(str[leng - i - 1] - '0');
+	this->buf = (AtomicT*) malloc(size);
+	for (size_t i = 0; i < size; i++)
+		buf[i] = str[leng - i - 1] - '0';
 }
 
-int & CBigIntLittle::operator[](const int i)
+CBigIntLittle::AtomicT & CBigIntLittle::operator[](const size_t i)
 {
 	return buf[i];
 }
 
-int CBigIntLittle::operator[](const int i) const
+CBigIntLittle::AtomicT CBigIntLittle::operator[](const size_t i) const
 {
 	return buf[i];
 }
@@ -35,7 +35,7 @@ bool operator==(const CBigIntLittle & a, const CBigIntLittle & b)
 	if (a.size != b.size || a.sign != b.sign)
 		return false;
 	else {
-		for (int i = 0; i < a.size; i++) 
+		for (size_t i = 0; i < a.size; i++) 
 			if (a[i] != b[i])
 				return false;
 		return true;
@@ -47,7 +47,7 @@ bool operator<(const CBigIntLittle & a, const CBigIntLittle &b) {
 		if (a.size != b.size)
 			return a.size > b.size ? !a.sign : a.sign;
 		else { // a.size() == b.size()
-			for (int i = a.size - 1; i >= 0; i--) {
+			for (size_t i = a.size - 1; i >= 0; i--) {
 				if (a[i] == b[i])
 					continue;
 				else
@@ -66,7 +66,7 @@ bool operator>(const CBigIntLittle & a, const CBigIntLittle &b) {
 		if (a.size != b.size)
 			return a.size > b.size ? a.sign : !a.sign;
 		else { // a.size() == b.size()
-			for (int i = a.size - 1; i >= 0; i--) {
+			for (size_t i = a.size - 1; i >= 0; i--) {
 				if (a[i] == b[i])
 					continue;
 				else
@@ -94,23 +94,22 @@ bool operator !=(const CBigIntLittle &a, const CBigIntLittle &b) {
 
 CBigIntLittle &CBigIntLittle::operator =(const CBigIntLittle &num) {
 	free(this->buf);
-	this->buf = (int*)malloc(num.size * sizeof(int));
-	for (int i = 0; i < num.size; i++)
+	this->buf = (AtomicT*)malloc(num.size);
+	for (size_t i = 0; i < num.size; i++)
 		this->buf[i] = num.buf[i];
 	this->sign = num.sign;
 	this->size = num.size;
 	return *this;
 }
 
-CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
-{	
+CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2) {	
 	CBigIntLittle sum;
-	int carry = 0;
+	CBigIntLittle::AtomicT carry = 0;
 	if (num1.sign == num2.sign) {
 		sum.size = num1.size > num2.size ? num1.size: num2.size;
-		sum.buf = (int*) malloc(sum.size * sizeof(int));
-		for (int i = 0; i < sum.size; i++) {
-			int temp;
+		sum.buf = (CBigIntLittle::AtomicT*) malloc(sum.size);
+		for (size_t i = 0; i < sum.size; i++) {
+			CBigIntLittle::AtomicT temp;
 			if (i >= num1.size) 
 				temp = num2.buf[i] + carry;
 			else
@@ -121,21 +120,19 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 			sum.buf[i] = temp % 10;
 			carry = temp / 10;
 		}
-		//std::cout << " 1: " << (clock() - t) << " ";
 		if (carry > 0) {
 			sum.size++;
-			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
+			sum.buf = (CBigIntLittle::AtomicT*)realloc(sum.buf, sum.size);
 			sum.buf[sum.size - 1] = carry;
 		}
 		sum.sign = num1.sign;
-		//std::cout << " 2: " << (clock() - t) << " ";
 	}
 	else {
 		bool num1_is_less;
 		if (num1.size != num2.size)
 			num1_is_less = num1.size > num2.size ? false : true;
 		else { 
-			int i;
+			size_t i;
 			for (i = num1.size - 1; i >= 0; i--) {
 				if (num1.buf[i] == num2.buf[i])
 					continue;
@@ -149,8 +146,8 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		}
 		if (num1_is_less) {
 			sum.size = num2.size;
-			sum.buf = (int*)malloc(sum.size * sizeof(int));
-			for (int i = 0; i < num2.size; i++) {
+			sum.buf = (CBigIntLittle::AtomicT*)malloc(sum.size);
+			for (size_t i = 0; i < num2.size; i++) {
 				if (i >= num1.size) {
 					sum.buf[i] = (num2.buf[i] - carry + 10) % 10;
 					carry = (num2.buf[i] - carry) >= 0 ? 0 : 1;
@@ -162,8 +159,8 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 		}
 		else {
 			sum.size = num1.size;
-			sum.buf = (int*)malloc(sum.size * sizeof(int));
-			for (int i = 0; i < num1.size; i++) {
+			sum.buf = (CBigIntLittle::AtomicT*)malloc(sum.size);
+			for (size_t i = 0; i < num1.size; i++) {
 				if (i >= num2.size) {
 					sum.buf[i] = (num1.buf[i] - carry + 10) % 10;
 					carry = (num1.buf[i] - carry) >= 0 ? 0 : 1;
@@ -182,7 +179,7 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2)
 			flag = true;
 		}
 		if (flag)
-			sum.buf = (int*)realloc(sum.buf, sum.size * sizeof(int));
+			sum.buf = (CBigIntLittle::AtomicT*)realloc(sum.buf, sum.size);
 		
 	}
 	return sum;
@@ -200,34 +197,34 @@ CBigIntLittle operator*(const CBigIntLittle &num1, const CBigIntLittle &num2) {
 	CBigIntLittle result;
 	clock_t t = clock();
 	result.size = num1.size + num2.size;
-	result.buf = (int*) malloc(result.size * sizeof(int));
-	for (int i = 0; i < result.size; i++)
-		result[i] = 0;
-	for (int i = 0; i < num2.size; ++i) {	
-		if (num2[i] != 0) {
-			int carry = 0;
-			for (int j = 0; j < num1.size; ++j) {
-				int temp = num1[j] * num2[i] + result[i + j] + carry;
-				result[i + j] = temp % 10;
+	result.buf = (CBigIntLittle::AtomicT*) malloc(result.size);
+	for (size_t i = 0; i < result.size; i++)
+		result.buf[i] = 0;
+	for (size_t i = 0; i < num2.size; ++i) {	
+		if (num2.buf[i] != 0) {
+			CBigIntLittle::AtomicT carry = 0;
+			for (size_t j = 0; j < num1.size; ++j) {
+				CBigIntLittle::AtomicT temp = num1.buf[j] * num2.buf[i] + result.buf[i + j] + carry;
+				result.buf[i + j] = temp % 10;
 				carry = temp / 10;
 			}
-			result[i + num1.size] = carry;
+			result.buf[i + num1.size] = carry;
 		}
 	}
-	std::cout << " 1: " << std::to_string(clock() - t) << "; ";
+	std::cout << " 1: " << std::to_string(double(clock() - t) / CLOCKS_PER_SEC * 1000) << "; ";
 	t = clock();
 	bool flag = false;
 	while (result.size > 1 && result[result.size - 1] == 0) {
 		result.size--;
 		flag = true;
 	}
-	std::cout << " 2: " << std::to_string(clock() - t) << "; ";
+	std::cout << " 2: " << std::to_string(double(clock() - t) / CLOCKS_PER_SEC * 1000) << "; ";
 	t = clock();
 	if (flag) {
-		result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
+		result.buf = (CBigIntLittle::AtomicT*)realloc(result.buf, result.size);
 	}
 	result.sign = num1.sign == num2.sign ? true : false;
-	std::cout << " 3: " << std::to_string(clock() - t) << "; ";
+	std::cout << " 3: " << std::to_string(double(clock() - t) / CLOCKS_PER_SEC * 1000) << "; ";
 	return result;
 }
 
@@ -238,14 +235,14 @@ CBigIntLittle operator*(const CBigIntLittle & a, const int & c) {
 	int b = c;
 	result.sign = (a.sign && b > 0) || (!a.sign && b < 0) ? true : false;
 	if (b < 0) b *= (-1);
-	int temp, carry = 0;
-	int sizeB = 0;
-	for (int i = b; i > 0; i = i / 10, sizeB++);
+	CBigIntLittle::AtomicT temp, carry = 0;
+	size_t sizeB = 0;
+	for (size_t i = b; i > 0; i = i / 10, sizeB++);
 	result.size = a.size + sizeB;
-	result.buf =(int*) malloc(result.size * sizeof(int));
-	for (int i = 0; i < result.size; i++)
+	result.buf =(CBigIntLittle::AtomicT*) malloc(result.size);
+	for (size_t i = 0; i < result.size; i++)
 		result[i] = 0;
-	int i;
+	size_t i;
 	for (i = 0; i < a.size; i++) {
 		temp = a[i] * b + carry;
 		carry = temp / 10;
@@ -255,26 +252,16 @@ CBigIntLittle operator*(const CBigIntLittle & a, const int & c) {
 		result[i++] = carry % 10;
 		carry /= 10;
 	}
-	/*bool flag = false;
-	if (result[result.size - 1] == 0) {
-		result.size--;
-		flag = true;
-	}
-	if (flag) {
-		result.buf = (int*)realloc(result.buf, result.size * sizeof(int));
-	}	*/
 	return result;
 }
 
 CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 {
 	clock_t t = clock();
-	//std::chrono::duration<double, std::milli> time_span;
-	//std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	if (a.size < b.size)
 		return CBigIntLittle("0");
 	if (a.size == b.size) {
-		for (int i = a.size - 1; i >= 0; i--) {
+		for (size_t i = a.size - 1; i >= 0; i--) {
 			if (a[i] == b[i])
 				continue;
 			else
@@ -283,30 +270,25 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 				else break;
 		}
 	}
-	//std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-	//time_span = t2 - t1;
 	std::cout << " 1: " << std::to_string(clock() - t) << "; ";
 	t = clock();
 	CBigIntLittle q;
 	q.sign = a.sign == b.sign ? true : false;
 	CBigIntLittle copyA;
 	copyA.size = a.size + 1;
-	copyA.buf = (int*) malloc (copyA.size * sizeof(int));
-	for (int i = 0; i < copyA.size- 1; i++) 
+	copyA.buf = (CBigIntLittle::AtomicT*) malloc (copyA.size);
+	for (size_t i = 0; i < copyA.size- 1; i++) 
 		copyA[i] = a[i];
 	copyA[copyA.size - 1] = 0;
-	int shift = 0;
+	size_t shift = 0;
 	CBigIntLittle copyB;
 	copyB = b;
 
-	short scale;
-	short qGuess, r;
-	short borrow, carry;
-	int n = b.size, m = a.size - b.size;
-	//t2 = std::chrono::high_resolution_clock::now();
-	//time_span = t2 - t1;
+	CBigIntLittle::AtomicT scale;
+	CBigIntLittle::AtomicT qGuess, r;
+	CBigIntLittle::AtomicT borrow, carry;
+	size_t n = b.size, m = a.size - b.size;
 	std::cout << " 2: " << std::to_string(clock() - t) << "; ";
-	//t1 = std::chrono::high_resolution_clock::now();
 	t = clock();
 	scale = 10 / (b[n - 1] + 1);
 	if (scale > 1) {
@@ -319,18 +301,15 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			copyB.size--;
 		}
 	}
-	//t2 = std::chrono::high_resolution_clock::now();
-	//time_span = t2 - t1;
 	std::cout << " 3: " << std::to_string(clock() - t) << "; ";
-	int *aSh = copyA.buf;
-	int *bSh = copyB.buf;
+	CBigIntLittle::AtomicT *aSh = copyA.buf;
+	CBigIntLittle::AtomicT *bSh = copyB.buf;
 	q.size = m + 1;
-	q.buf = (int*) malloc(q.size * sizeof(int));
-	int q_ind, a_ind;
-	//t1 = std::chrono::high_resolution_clock::now();
+	q.buf = (CBigIntLittle::AtomicT*) malloc(q.size);
+	size_t q_ind, a_ind;
 	t = clock();
 	for (q_ind = m, a_ind = n + q_ind; q_ind >= 0; q_ind--, a_ind--) {
-		int temp = (aSh[a_ind] * 10 + aSh[a_ind - 1]);
+		CBigIntLittle::AtomicT temp = (aSh[a_ind] * 10 + aSh[a_ind - 1]);
 		qGuess = temp / bSh[n - 1];
 		r = temp % bSh[n - 1];
 		while (r < 10) {
@@ -342,10 +321,10 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 		}
 		carry = 0; 
 		borrow = 0;
-		int *aShift = &aSh[0] + q_ind;
+		CBigIntLittle::AtomicT *aShift = &aSh[0] + q_ind;
 
-		int temp1, temp2;
-		for (int i = 0; i < n; i++) {
+		CBigIntLittle::AtomicT temp1, temp2;
+		for (size_t i = 0; i < n; i++) {
 			temp1 = bSh[i] * qGuess + carry;
 			carry = temp1 / 10;
 			temp1 -= carry * 10;
@@ -384,7 +363,7 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 				q[q_ind + shift] = qGuess - 1;
 			}
 			carry = 0;
-			for (int i = 0; i < n; i++) {
+			for (size_t i = 0; i < n; i++) {
 				temp = aShift[i] + bSh[i] + carry;
 				if (temp >= 10) {
 					aShift[i] = temp - 10;
@@ -398,32 +377,22 @@ CBigIntLittle operator/(const CBigIntLittle & a, const CBigIntLittle & b)
 			aShift[n] += carry - 10;
 		}
 	}
-	/*while (copyA.size > 1 && (copyA[copyA.size - 1] == 0))
-		copyA.size--;*/
-	//t2 = std::chrono::high_resolution_clock::now();
-//	time_span = t2 - t1;
 	std::cout << " 4: " << std::to_string(clock() - t) << "; ";
-	//t1 = std::chrono::high_resolution_clock::now();
 	t = clock();
 	copyA.deleteNumber();
 	copyB.deleteNumber();
-	//t2 = std::chrono::high_resolution_clock::now();
-	//time_span = t2 - t1;
 	std::cout << " 5: " << std::to_string(clock() - t) << "; ";
-	//t1 = std::chrono::high_resolution_clock::now();
 	t = clock();
 	if (shift != 0) {
 		std::cout << " shift point - >";
-		for (int i = 0; i <= m - shift; i++)
+		for (size_t i = 0; i <= m - shift; i++)
 			q[i] = q[i + shift];
 		m -= shift;
 		q.size = m + 1;
-		q.buf = (int*)realloc(q.buf, q.size * sizeof(int));
+		q.buf = (CBigIntLittle::AtomicT*)realloc(q.buf, q.size);
 	}
 	else	
 		q.size = m + 1;
-	//t2 = std::chrono::high_resolution_clock::now();
-	//time_span = t2 - t1;
 	std::cout << " 6: " << std::to_string(clock() - t) << "; ";
 	return q;
 }
@@ -438,7 +407,7 @@ std::istream &operator >> (std::istream &stream, CBigIntLittle &num) {
 std::ostream &operator<<(std::ostream &stream, const CBigIntLittle &num) {
 	if (!num.sign)
 		stream << '-';
-	for (int i = num.size - 1; i >= 0; i--) {
+	for (size_t i = num.size - 1; i >= 0; i--) {
 		stream << num[i];
 	}
 	return stream;

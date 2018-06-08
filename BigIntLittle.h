@@ -7,16 +7,20 @@
 #include <ratio>
 #include <chrono>
 
-
 class CBigIntLittle {
-	int* buf;
-	int size;
+public:
+	using AtomicT = unsigned char;
+
+private:
+	AtomicT* buf;
+	size_t size;
 	bool sign;
+
 public:
 	CBigIntLittle();
 	CBigIntLittle(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	AtomicT &operator[](const size_t);
+	AtomicT operator[](const size_t)const;
 	friend bool operator ==(const CBigIntLittle &a, const CBigIntLittle &b);
 	friend bool operator <(const CBigIntLittle &a, const CBigIntLittle &b);
 	friend bool operator >(const CBigIntLittle &a, const CBigIntLittle &b);
