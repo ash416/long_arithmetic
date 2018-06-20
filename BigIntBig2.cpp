@@ -112,9 +112,7 @@ CBigIntBig2 operator+(const CBigIntBig2 & num1, const CBigIntBig2 & num2)
 	if (num1.sign == num2.sign) {
 		sum.size = (num1.size > num2.size ? num1.size : num2.size) + 1;
 		sum.buf = (int*)malloc(sum.size * sizeof(int));
-		sum.num = &sum.buf[0];
-
-		
+		sum.num = &sum.buf[0];		
 		for (int i = num1.size - 1, j = num2.size - 1, sum_index = sum.size - 1; i >= 0 || j >= 0; i--, j--, sum_index--) {
 			int temp;
 			if (i < 0)
@@ -183,7 +181,7 @@ CBigIntBig2 operator+(const CBigIntBig2 & num1, const CBigIntBig2 & num2)
 		}
 		sum.sign = num1_is_less ? num2.sign : num1.sign;
 		int i = 0;
-		while (sum.size > 1 && sum.buf[i] == 0) {
+		while (sum.size > 1 && sum[i] == 0) {
 			sum.size--; i++;
 		}
 		if (i > 0) {
@@ -219,6 +217,7 @@ CBigIntBig2 operator*(const CBigIntBig2 &num1, const CBigIntBig2 &num2) {
 	}
 	int i = 0;
 	while (result.size > 1 && result[i] == 0) {
+		std::cout << "---";
 		result.size--;
 		i++;
 	}

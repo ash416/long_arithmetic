@@ -5,21 +5,24 @@
 
 
 class CBigDoubleBig {
-	int* buf;
-	int size;
-	int point;
+public:
+	using AtomicT = unsigned char;
+private:
+	AtomicT* buf;
+	size_t size;
+	size_t point;
 	bool sign;
 public:
 	CBigDoubleBig();
 	CBigDoubleBig(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	/*int &operator[](const int);
+	int operator[](const int)const;*/
 	friend bool operator ==(const CBigDoubleBig &a, const CBigDoubleBig &b);
-	friend bool operator <(const CBigDoubleBig &a, const CBigDoubleBig &b);
+	/*friend bool operator <(const CBigDoubleBig &a, const CBigDoubleBig &b);
 	friend bool operator >(const CBigDoubleBig &a, const CBigDoubleBig &b);
 	friend bool operator <=(const CBigDoubleBig &a, const CBigDoubleBig &b);
 	friend bool operator >=(const CBigDoubleBig &a, const CBigDoubleBig &b);
-	friend bool operator !=(const CBigDoubleBig &a, const CBigDoubleBig &b);
+	friend bool operator !=(const CBigDoubleBig &a, const CBigDoubleBig &b);*/
 	CBigDoubleBig &operator =(const CBigDoubleBig &num);
 	friend CBigDoubleBig operator*(const CBigDoubleBig & a, const int & b);
 	void differences(CBigDoubleBig & res, const CBigDoubleBig & big, const CBigDoubleBig & small);
@@ -32,9 +35,9 @@ public:
 	void deleteNumber() {
 		free(buf);
 	}
-	int getSizeInt() { return size - point - 1; }
-	int getSizeFrac() { return point + 1; }
-	int getSize() { return this->size; }
+	size_t getSizeInt() { return size - point - 1; }
+	size_t  getSizeFrac() { return point + 1; }
+	size_t  getSize() { return this->size; }
 
 };
 

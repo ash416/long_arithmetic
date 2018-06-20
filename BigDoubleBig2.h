@@ -5,22 +5,25 @@
 
 
 class CBigDoubleBig2 {
-	int* int_part;
-	int int_size;
-	int* frac_part;
-	int frac_size;
+public:
+	using AtomicT = unsigned char;
+private:
+	AtomicT* int_part;
+	size_t int_size;
+	AtomicT* frac_part;
+	size_t frac_size;
 	bool sign;
 public:
 	CBigDoubleBig2();
 	CBigDoubleBig2(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	AtomicT &operator[](const size_t);
+	AtomicT operator[](const size_t)const;
 	friend bool operator ==(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
-	friend bool operator <(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
+/*	friend bool operator <(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
 	friend bool operator >(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
 	friend bool operator <=(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
 	friend bool operator >=(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
-	friend bool operator !=(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);
+	friend bool operator !=(const CBigDoubleBig2 &a, const CBigDoubleBig2 &b);*/
 	CBigDoubleBig2 &operator =(const CBigDoubleBig2 &num);
 	friend CBigDoubleBig2 operator*(const CBigDoubleBig2 & a, const int & b);
 	void differences(CBigDoubleBig2 & res, const CBigDoubleBig2 & big, const CBigDoubleBig2 & small);
@@ -36,7 +39,7 @@ public:
 	}
 	/*int getSizeInt() { return size - point - 1; }
 	int getSizeFrac() { return point + 1; }*/
-	int getSize() { return this->int_size + this->frac_size; }
+	size_t getSize() { return this->int_size + this->frac_size; }
 
 };
 

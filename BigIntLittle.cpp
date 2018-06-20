@@ -104,6 +104,7 @@ CBigIntLittle &CBigIntLittle::operator =(const CBigIntLittle &num) {
 
 CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2) {	
 	CBigIntLittle sum;
+	clock_t t = std::clock();
 	CBigIntLittle::AtomicT carry = 0;
 	if (num1.sign == num2.sign) {
 		sum.size = num1.size > num2.size ? num1.size: num2.size;
@@ -120,11 +121,14 @@ CBigIntLittle operator+(const CBigIntLittle & num1, const CBigIntLittle & num2) 
 			sum.buf[i] = temp % 10;
 			carry = temp / 10;
 		}
+		std::cout << " 1: " << std::clock() - t << " ";
+		t = std::clock();
 		if (carry > 0) {
 			sum.size++;
 			sum.buf = (CBigIntLittle::AtomicT*)realloc(sum.buf, sum.size);
 			sum.buf[sum.size - 1] = carry;
 		}
+		std::cout << " 2: " << std::clock() - t << " ";
 		sum.sign = num1.sign;
 	}
 	else {

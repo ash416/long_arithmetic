@@ -5,16 +5,19 @@
 
 
 class CBigDoubleLittle2 {
-	int* int_part;
-	int int_size;
-	int* frac_part;
-	int frac_size;
+public:
+	using AtomicT = unsigned char;
+private:
+	AtomicT* int_part;
+	size_t int_size;
+	AtomicT* frac_part;
+	size_t frac_size;
 	bool sign;
 public:
 	CBigDoubleLittle2();
 	CBigDoubleLittle2(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	AtomicT &operator[](const size_t);
+	AtomicT operator[](const size_t)const;
 	friend bool operator ==(const CBigDoubleLittle2 &a, const CBigDoubleLittle2 &b);
 //	friend bool operator <(const CBigDoubleLittle2 &a, const CBigDoubleLittle2 &b);
 //	friend bool operator >(const CBigDoubleLittle2 &a, const CBigDoubleLittle2 &b);
@@ -36,7 +39,7 @@ public:
 	}
 	//int getSizeInt() { return size - point - 1; }
 	//int getSizeFrac() { return point + 1; }
-	int getSize() { return this->int_size + this->frac_size; }
+	size_t getSize() { return this->int_size + this->frac_size; }
 
 };
 

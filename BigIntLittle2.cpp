@@ -290,13 +290,13 @@ CBigIntLittle2 operator/(const CBigIntLittle2 & a, const CBigIntLittle2 & b)
 	q.num = &q.buf[0];
 	int q_ind, a_ind;
 	for (q_ind = m, a_ind = n + q_ind; q_ind >= 0; q_ind--, a_ind--) {
-		int temp = (copyA[a_ind] * 10 + copyA[a_ind - 1]);
-		qGuess = temp / copyB[n - 1];
-		r = temp % copyB[n - 1];
+		int temp = (copyA.buf[a_ind] * 10 + copyA.buf[a_ind - 1]);
+		qGuess = temp / copyB.buf[n - 1];
+		r = temp % copyB.buf[n - 1];
 		while (r < 10) {
-			if (copyB[n - 2] * qGuess > r * 10 + copyA[a_ind - 2] || qGuess == 10) {
+			if (copyB.buf[n - 2] * qGuess > r * 10 + copyA.buf[a_ind - 2] || qGuess == 10) {
 				qGuess--;
-				r += copyB[n - 1];
+				r += copyB.buf[n - 1];
 			}
 			else break;
 		}
@@ -306,7 +306,7 @@ CBigIntLittle2 operator/(const CBigIntLittle2 & a, const CBigIntLittle2 & b)
 
 		int temp1, temp2;
 		for (int i = 0; i < n; i++) {
-			temp1 = copyB[i] * qGuess + carry;
+			temp1 = copyB.buf[i] * qGuess + carry;
 			carry = temp1 / 10;
 			temp1 -= carry * 10;
 			temp2 = aShift[i] - temp1 + borrow;
@@ -346,7 +346,7 @@ CBigIntLittle2 operator/(const CBigIntLittle2 & a, const CBigIntLittle2 & b)
 			}
 			carry = 0;
 			for (int i = 0; i < n; i++) {
-				temp = aShift[i] + copyB[i] + carry;
+				temp = aShift[i] + copyB.buf[i] + carry;
 				if (temp >= 10) {
 					aShift[i] = temp - 10;
 					carry = 1;
@@ -362,6 +362,7 @@ CBigIntLittle2 operator/(const CBigIntLittle2 & a, const CBigIntLittle2 & b)
 	copyA.deleteNumber();
 	copyB.deleteNumber();
 	if (shift != 0) {
+		std::cout << "---";
 		m -= shift;
 		q.num = &q.buf[shift];
 	}

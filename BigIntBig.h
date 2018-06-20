@@ -9,14 +9,18 @@
 
 
 class CBigIntBig {
-	int* buf;
-	int size;
+public:
+	using AtomicT = unsigned char;
+
+private:
+	AtomicT* buf;
+	size_t size;
 	bool sign;
 public:
 	CBigIntBig();
 	CBigIntBig(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	AtomicT &operator[](const size_t);
+	AtomicT operator[](const size_t)const;
 	friend bool operator ==(const CBigIntBig &a, const CBigIntBig &b);
 	friend bool operator <(const CBigIntBig &a, const CBigIntBig &b);
 	friend bool operator >(const CBigIntBig &a, const CBigIntBig &b);
@@ -34,7 +38,7 @@ public:
 	void deleteNumber() {
 		free(buf);
 	}
-	int getSize() { return this->size; }
+	size_t getSize() { return this->size; }
 };
 
 #endif CBIGINTBIG_H

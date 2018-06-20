@@ -5,15 +5,18 @@
 
 
 class CBigDoubleLittle3 {
-	int* buf;
-	int size;
+public:
+	using AtomicT = char;
+private:
+	AtomicT* buf;
+	size_t size;
 	int order;
 	bool sign;
 public:
 	CBigDoubleLittle3();
 	CBigDoubleLittle3(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	/*int &operator[](const int);
+	int operator[](const int)const;*/
 	friend bool operator ==(const CBigDoubleLittle3 &a, const CBigDoubleLittle3 &b);
 /*	friend bool operator <(const CBigDoubleLittle3 &a, const CBigDoubleLittle3 &b);
 	friend bool operator >(const CBigDoubleLittle3 &a, const CBigDoubleLittle3 &b);

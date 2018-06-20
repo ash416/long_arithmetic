@@ -5,15 +5,18 @@
 
 
 class CBigDoubleBig3 {
-	int* buf;
-	int size;
+public:
+	using AtomicT = char;
+private:
+	AtomicT* buf;
+	size_t size;
 	int order;
 	bool sign;
 public:
 	CBigDoubleBig3();
 	CBigDoubleBig3(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	/*int &operator[](const int);
+	int operator[](const int)const;*/
 	friend bool operator ==(const CBigDoubleBig3 &a, const CBigDoubleBig3 &b);
 /*	friend bool operator <(const CBigDoubleBig3 &a, const CBigDoubleBig3 &b);
 	friend bool operator >(const CBigDoubleBig3 &a, const CBigDoubleBig3 &b);
@@ -32,7 +35,7 @@ public:
 	void deleteNumber() {
 		free(buf);
 	}
-	int getSize() { return this->size; }
+	size_t getSize() { return this->size; }
 
 };
 

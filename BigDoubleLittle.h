@@ -5,15 +5,18 @@
 
 
 class CBigDoubleLittle {
-	int* buf;
-	int size;
-	int point;
+public:
+	using AtomicT = unsigned char;
+private:
+	AtomicT* buf;
+	size_t size;
+	size_t point;
 	bool sign;
 public:
 	CBigDoubleLittle();
 	CBigDoubleLittle(std::string);
-	int &operator[](const int);
-	int operator[](const int)const;
+	//AtomicT &operator[](const size_t);
+	//AtomicT operator[](const size_t)const;
 	friend bool operator ==(const CBigDoubleLittle &a, const CBigDoubleLittle &b);
 	friend bool operator <(const CBigDoubleLittle &a, const CBigDoubleLittle &b);
 	friend bool operator >(const CBigDoubleLittle &a, const CBigDoubleLittle &b);
@@ -32,9 +35,9 @@ public:
 	void deleteNumber() {
 		free(buf);
 	}
-	int getSizeInt() { return size - point - 1; }
-	int getSizeFrac() { return point + 1; }
-	int getSize() { return this->size; }
+	size_t getSizeInt() { return size - point - 1; }
+	size_t getSizeFrac() { return point + 1; }
+	size_t getSize() { return this->size; }
 	
 };
 
